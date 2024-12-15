@@ -25,8 +25,8 @@ ExternalProject_Add(
     #--Configure step-------------
     USES_TERMINAL_CONFIGURE TRUE
     CONFIGURE_COMMAND
-        ../openssl/config --api=1.1.0 no-deprecated --$<LIST:TRANSFORM,$<CONFIG>,TOLOWER>
-        --prefix=${OPENSSL_INSTALL_PREFIX}
+        ../openssl/config --api=1.1.0 no-deprecated
+        --$<LIST:TRANSFORM,$<CONFIG>,TOLOWER> --prefix=${OPENSSL_INSTALL_PREFIX}
         #XXX --libdir=lib #FIXME: /${OPENSSL_BUILD_TYPE}
         --openssldir=${OPENSSL_INSTALL_PREFIX}/etc/ssl #
         no-zlib #XXX
