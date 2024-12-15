@@ -1,86 +1,54 @@
-project(openssl LANGUAGES C)
+cmake_minimum_required(VERSION 3.25...3.31)
 
-set(TARBALL_VERSION 3.0.13)
-set(MD5 c15e53a62711002901d3515ac8b30b86)
+project(openssl_build LANGUAGES C)
 
-set(EXPORTS
-    "export CFLAGS='-march=armv8-a -Wall -g -O3'"
-    "export CXXFLAGS='-march=armv8-a -Wall -g -O3'"
-    "export LDFLAGS='-Wl,--build-id'"
-    "export PKG_CONFIG_SYSROOT_DIR='${CMAKE_SYSROOT}'"
-    "export PKG_CONFIG_PATH='${CMAKE_SYSROOT}/usr/lib/pkgconfig'"
+set(OPENSSL_VERSION "3.4.0")
+set(SHA256 e15dda82fe2fe8139dc2ac21a36d4ca01d5313c75f99f46c4e8a27709b7294bf)
+set(OPENSSL_URL
+    "https://www.openssl.org/source/openssl-${OPENSSL_VERSION}.tar.gz"
 )
-string(REPLACE ";" "\n" EXPORTS "${EXPORTS}")
-#XXX configure_file(${CMAKE_PATH}/build-wrapper.sh.in build-wrapper.sh)
 
-include(ExternalProject)
-ExternalProject_Add(${PROJECT_NAME}
+# include(ExternalProject)
+
+set(OPENSSL_BUILD_TYPE $<CONFIG>)
+
+#XXX include(zlib.cmake)
+
+ExternalProject_Add(
+    openssl
     DOWNLOAD_EXTRACT_TIMESTAMP TRUE
-    PREFIX ${CMAKE_CURRENT_BINARY_DIR}
-    INSTALL_DIR install
+    PREFIX ${CMAKE_BINARY_DIR}
     #--Download step--------------
-    URL https://github.com/openssl/openssl/releases/download/openssl-${TARBALL_VERSION}/${PROJECT_NAME}-${TARBALL_VERSION}.tar.gz
-    URL_MD5 ${MD5}
+    URL ${OPENSSL_URL}
+    URL_HASH SHA256=${SHA256}
     #--Update/Patch step----------
     #--Configure step-------------
     USES_TERMINAL_CONFIGURE TRUE
     CONFIGURE_COMMAND
-        #XXX ${CMAKE_CURRENT_BINARY_DIR}/build-wrapper.sh
-        ./Configure
-            --prefix=/usr
-            # --libdir=lib
-            --openssldir=/etc/ssl
-            no-capieng
-            no-cms
-            no-gost
-            no-makedepend
-            no-srtp
-            no-tests
-            no-aria
-            no-bf
-            no-blake2
-            no-camellia
-            no-cast
-            no-cmac
-            no-cmp
-            no-idea
-            no-mdc2
-            no-ocb
-            no-rc2
-            no-rc4
-            no-rmd160
-            no-scrypt
-            no-seed
-            no-siphash
-            no-sm2
-            no-sm3
-            no-sm4
-            no-ssl-trace
-            no-whirlpool
-            zlib
-            linux-aarch64
+        ../openssl/config --api=1.1.0 no-deprecated --$<LIST:TRANSFORM,$<CONFIG>,TOLOWER>
+        --prefix=${OPENSSL_INSTALL_PREFIX}
+        #XXX --libdir=lib #FIXME: /${OPENSSL_BUILD_TYPE}
+        --openssldir=${OPENSSL_INSTALL_PREFIX}/etc/ssl #
+        no-zlib #XXX
+        --with-zlib-include=${OPENSSL_INSTALL_PREFIX}/include
+        --with-zlib-lib=${OPENSSL_INSTALL_PREFIX}/lib no-apps no-aria no-asm
+        no-async no-bf no-blake2 no-camellia no-capieng no-cast no-cmac no-cmp
+        no-cms no-ct no-docs no-dso no-ec no-ec2m no-gost no-idea no-makedepend
+        no-mdc2 no-ocb no-rc2 no-rc4 no-rmd160 no-scrypt no-seed no-shared
+        no-siphash no-sm2 no-sm3 no-sm4 no-srtp no-ssl-trace no-tests
+        no-whirlpool
+    # linux-aarch64
     #--Build step-----------------
     USES_TERMINAL_BUILD TRUE
-    BUILD_IN_SOURCE 1
-    BUILD_COMMAND
-        #XXX ${CMAKE_CURRENT_BINARY_DIR}/build-wrapper.sh
-        make
+    BUILD_COMMAND make -C <BINARY_DIR> -j8
     #--Install step---------------
     USES_TERMINAL_INSTALL TRUE
-    INSTALL_COMMAND
-        #XXX ${CMAKE_CURRENT_BINARY_DIR}/build-wrapper.sh
-        make
-            install
-            DESTDIR=${CMAKE_CURRENT_BINARY_DIR}/install
-)
-add_dependencies(${PROJECT_NAME} zlib)
-
-install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/install/
-    DESTINATION ${CMAKE_SYSROOT_REL}
-    USE_SOURCE_PERMISSIONS
-    COMPONENT ${PROJECT_NAME}
+    INSTALL_COMMAND make -C <BINARY_DIR> -j8 install
+    #--Logging -------------------
+    LOG_DOWNLOAD ON
+    LOG_CONFIGURE ON
+    LOG_BUILD ON
+    LOG_INSTALL ON
 )
 
-string(TOUPPER ${PROJECT_NAME} TARGET)
-set(CPACK_ARCHIVE_${TARGET}_FILE_NAME ${PROJECT_NAME}-${TARBALL_VERSION}-${CMAKE_SYSTEM_PROCESSOR} CACHE INTERNAL "")
-
+#XXX add_dependencies(openssl zlib)
