@@ -129,7 +129,7 @@ static void usage(void)
     printf("       --or--\n");
     printf("       sslecho c ip\n");
     printf("       c=client, s=server, ip=dotted ip of server\n");
-    exit(EXIT_FAILURE);
+    exit(EXIT_SUCCESS);
 }
 
 #define BUFFERSIZE 1024

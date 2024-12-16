@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.25...3.31)
 
 project(zlib_build LANGUAGES C)
 
-# include(ExternalProject)
+include(ExternalProject)
 
 ExternalProject_Add(
     zlib
@@ -14,11 +14,11 @@ ExternalProject_Add(
     #--Update/Patch step----------
     #--Configure step-------------
     USES_TERMINAL_CONFIGURE TRUE
-    CONFIGURE_COMMAND cmake -G Ninja -S ../zlib -B . -D CMAKE_BUILD_TYPE=Release
+    CONFIGURE_COMMAND cmake -S ../zlib -B . -D CMAKE_BUILD_TYPE=$<CONFIG>
     #--Build step-----------------
     USES_TERMINAL_BUILD TRUE
     # BUILD_IN_SOURCE 1
-    BUILD_COMMAND cmake --build .
+    BUILD_COMMAND cmake --build . -j 8
     #--Install step---------------
     USES_TERMINAL_INSTALL TRUE
     INSTALL_COMMAND
