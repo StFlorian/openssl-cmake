@@ -14,29 +14,38 @@ include(openssl.cmake)
 
 # Optionally, add OpenSSL include and library directories for other targets
 set(OPENSSL_INCLUDE_DIR ${OPENSSL_INSTALL_PREFIX}/include)
-set(OPENSSL_LIB_DIR ${OPENSSL_INSTALL_PREFIX}/lib)
+if(LINUX)
+    set(OPENSSL_LIB_DIR ${OPENSSL_INSTALL_PREFIX}/lib86)
+else()
+    set(OPENSSL_LIB_DIR ${OPENSSL_INSTALL_PREFIX}/lib)
+endif()
 
 # Display helpful messages
+message(STATUS "FIND_LIBRARY_USE_LIB64_PATHS: ${FIND_LIBRARY_USE_LIB64_PATHS}")
+message(STATUS "CMAKE_LIBRARY_ARCHITECTURE: ${CMAKE_LIBRARY_ARCHITECTURE}")
+message(STATUS "CMAKE_LINK_LIBRARY_SUFFIX: ${CMAKE_LINK_LIBRARY_SUFFIX}")
 message(STATUS "OpenSSL will be installed to: ${OPENSSL_INSTALL_DIR}")
 message(STATUS "Include directory: ${OPENSSL_INCLUDE_DIR}")
 message(STATUS "Library directory: ${OPENSSL_LIB_DIR}")
+
+if(UNIX AND NOT CMAKE_LINK_LIBRARY_SUFFIX)
+    set(_CMAKE_LINK_LIBRARY_SUFFIX ".a")
+endif()
 
 set(ZLIB_DEBUG_POSTFIX)
 if(CMAKE_BUILD_TYPE STREQUAL Debug)
     set(ZLIB_DEBUG_POSTFIX "d")
 endif()
+set(ZLIB_LINK_LIBRARIES z${ZLIB_DEBUG_POSTFIX})
 
-set(WIN32_LIBRARY_PREFIX)
+set(OPENSSL_LINK_LIBRARIES)
 if(MSVC)
     set(OPENSSL_LINK_LIBRARIES
-        "optimized;ws2_32.lib;gdi32.lib;advapi32.lib;crypt32.lib;user32.lib;z.lib"
-        "debug;ws2_32.lib;gdi32.lib;advapi32.lib;crypt32.lib;user32.lib;zd.lib"
+        "ws2_32.lib;gdi32.lib;advapi32.lib;crypt32.lib;user32.lib"
     )
-    set(WIN32_LIBRARY_PREFIX lib)
-else()
-    set(OPENSSL_LINK_LIBRARIES z${ZLIB_DEBUG_POSTFIX})
+    set(ZLIB_LINK_LIBRARIES zlib${ZLIB_DEBUG_POSTFIX})
+    set(OPENSSL_LIBRARY_PREFIX lib)
 endif()
-
 
 add_executable(my_app main.c)
 target_include_directories(my_app PRIVATE ${OPENSSL_INCLUDE_DIR})
@@ -44,15 +53,31 @@ target_link_directories(my_app PRIVATE ${OPENSSL_LIB_DIR})
 target_link_libraries(
     my_app
     PRIVATE
-        ${WIN32_LIBRARY_PREFIX}ssl
-        ${WIN32_LIBRARY_PREFIX}crypto
+        ${OPENSSL_LIBRARY_PREFIX}ssl${ZLIB_DEBUG_POSTFIX}
+        ${OPENSSL_LIBRARY_PREFIX}crypto${ZLIB_DEBUG_POSTFIX}
         ${OPENSSL_LINK_LIBRARIES}
+        ${ZLIB_LINK_LIBRARIES}
 )
 add_dependencies(my_app openssl)
 add_test(NAME my-app-h COMMAND my_app -h)
 
 # Create a target that depends on the OpenSSL build
 add_custom_target(openssl_build ALL DEPENDS openssl)
+
+if(ZLIB_DEBUG_POSTFIX)
+    add_custom_command(
+        TARGET openssl
+        POST_BUILD
+        COMMAND
+            ${CMAKE_COMMAND} -E copy_if_different libssl${_CMAKE_LINK_LIBRARY_SUFFIX}
+            libssl${ZLIB_DEBUG_POSTFIX}${_CMAKE_LINK_LIBRARY_SUFFIX}
+        COMMAND
+            ${CMAKE_COMMAND} -E copy_if_different libcrypto${_CMAKE_LINK_LIBRARY_SUFFIX}
+            libcrypto${ZLIB_DEBUG_POSTFIX}${_CMAKE_LINK_LIBRARY_SUFFIX}
+        VERBATIM
+        WORKING_DIRECTORY ${OPENSSL_LIB_DIR}
+    )
+endif()
 
 # test if the targets are usable from the install directory
 add_test(

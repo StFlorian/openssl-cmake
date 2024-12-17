@@ -62,10 +62,10 @@ ExternalProject_Add(
     USES_TERMINAL_INSTALL TRUE
     INSTALL_COMMAND ${MAKE_PROGRAM} -C <BINARY_DIR> install
     #--Logging -------------------
-    LOG_DOWNLOAD ${OPENSSL_WRITE_LOG}
+    # LOG_DOWNLOAD ${OPENSSL_WRITE_LOG}
     LOG_CONFIGURE ${OPENSSL_WRITE_LOG}
     LOG_BUILD ${OPENSSL_WRITE_LOG}
-    LOG_INSTALL ${OPENSSL_WRITE_LOG}
+    # LOG_INSTALL ${OPENSSL_WRITE_LOG}
 )
 
-add_dependencies(openssl zlib)
+add_dependencies(openssl zlib1)

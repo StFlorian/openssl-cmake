@@ -7,6 +7,9 @@
  *  https://www.openssl.org/source/license.html
  */
 
+#include <zlib.h>
+
+#include <assert.h>
 #include <stdio.h>
 #include <string.h>
 #include <signal.h>
@@ -129,6 +132,9 @@ static void usage(void)
     printf("       --or--\n");
     printf("       sslecho c ip\n");
     printf("       c=client, s=server, ip=dotted ip of server\n");
+    printf("Info:\n\t ZLIB_VERSION=%s\n", ZLIB_VERSION);
+
+    assert(ZLIB_VERNUM == 0x1250);
     exit(EXIT_SUCCESS);
 }
 
@@ -280,7 +286,9 @@ int main(int argc, char **argv)
         client_skt = create_socket(false);
         /* Set up connect address */
         addr.sin_family = AF_INET;
+#ifndef WIN32
         inet_pton(AF_INET, rem_server_ip, &addr.sin_addr.s_addr);
+#endif
         addr.sin_port = htons(server_port);
         /* Do TCP connect with server */
         if (connect(client_skt, (struct sockaddr*) &addr, sizeof(addr)) != 0) {
