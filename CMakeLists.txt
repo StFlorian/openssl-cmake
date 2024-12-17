@@ -6,7 +6,7 @@ if(NOT CMAKE_C_STANDARD)
     set(CMAKE_C_STANDARD 17)
 endif()
 
-set(OPENSSL_INSTALL_PREFIX /opt/local)
+set(OPENSSL_INSTALL_PREFIX /tmp/local)
 set(CMAKE_SKIP_TEST_ALL_DEPENDENCY NO)
 enable_testing()
 
@@ -30,6 +30,8 @@ message(STATUS "Library directory: ${OPENSSL_LIB_DIR}")
 
 if(UNIX AND NOT CMAKE_LINK_LIBRARY_SUFFIX)
     set(_CMAKE_LINK_LIBRARY_SUFFIX ".a")
+else()
+    set(_CMAKE_LINK_LIBRARY_SUFFIX ${CMAKE_LINK_LIBRARY_SUFFIX})
 endif()
 
 set(ZLIB_DEBUG_POSTFIX)
