@@ -15,7 +15,7 @@ include(openssl.cmake)
 # Optionally, add OpenSSL include and library directories for other targets
 set(OPENSSL_INCLUDE_DIR ${OPENSSL_INSTALL_PREFIX}/include)
 if(LINUX)
-    set(OPENSSL_LIB_DIR ${OPENSSL_INSTALL_PREFIX}/lib86)
+    set(OPENSSL_LIB_DIR ${OPENSSL_INSTALL_PREFIX}/lib64)
 else()
     set(OPENSSL_LIB_DIR ${OPENSSL_INSTALL_PREFIX}/lib)
 endif()
