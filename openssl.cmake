@@ -38,11 +38,11 @@ ExternalProject_Add(
     CONFIGURE_COMMAND
         # see build/src/openssl/Configure
         # bash only! build/src/openssl/config
-        ${PERL_PROGRAM} ../openssl/Configure --api=1.1.0 # TBD: --api=1.0.2
-        no-deprecated --static # TODO: depends on BUILD_SHARED_LIBS
+        ${PERL_PROGRAM} ../openssl/Configure --api=1.0.2 # ORIG --api=1.1.0 no-deprecated
+        --static # TODO: depends on BUILD_SHARED_LIBS
         --$<LIST:TRANSFORM,$<CONFIG>,TOLOWER> # NOTE: --debug or --release
         --prefix=${CMAKE_INSTALL_PREFIX}
-        # NO, do not used! --libdir=lib #FIXME: /${OPENSSL_BUILD_TYPE}
+        # NO, do not use! --libdir=lib # FIXME: /${OPENSSL_BUILD_TYPE}
         --openssldir=${CMAKE_INSTALL_PREFIX}/etc/ssl #
         no-zlib # FIXME: debug lib name: zlibd.lib
         # --with-zlib-include=${CMAKE_INSTALL_PREFIX}/include #
