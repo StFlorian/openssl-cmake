@@ -69,8 +69,9 @@ jobs:
       - name: Configure CMake
         run: >
           cmake -B ${{ steps.strings.outputs.build-output-dir }}
-          -DCMAKE_C_COMPILER=${{ matrix.c_compiler }}
-          -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
+          -D CMAKE_C_COMPILER=${{ matrix.c_compiler }}
+          -D CMAKE_BUILD_TYPE=${{ matrix.build_type }}
+          -D CMAKE_INSTALL_PREFIX=/tmp/install
           -S ${{ github.workspace }}
           -G "${{ matrix.generator }}"
 

@@ -1,23 +1,30 @@
-cmake_minimum_required(VERSION 3.25...3.31)
+cmake_minimum_required(VERSION 3.27...3.31)
 
 project(OpenSSL_ExternalProject LANGUAGES C)
 
+set(BUILD_SHARED_LIBS OFF CACHE BOOL "Forced!" FORCE)
+
 if(NOT CMAKE_C_STANDARD)
-    set(CMAKE_C_STANDARD 17)
+    set(CMAKE_C_STANDARD 11)
+    set(CMAKE_C_STANDARD_REQUIRED YES)
+    set(CMAKE_C_EXTENSIONS NO)
 endif()
 
-set(OPENSSL_INSTALL_PREFIX /tmp/local)
+if(NOT CMAKE_PREFIX_PATH)
+    set(CMAKE_PREFIX_PATH ${CMAKE_INSTALL_PREFIX})
+endif()
+
 set(CMAKE_SKIP_TEST_ALL_DEPENDENCY NO)
 enable_testing()
 
 include(openssl.cmake)
 
 # Optionally, add OpenSSL include and library directories for other targets
-set(OPENSSL_INCLUDE_DIR ${OPENSSL_INSTALL_PREFIX}/include)
+set(OPENSSL_INCLUDE_DIR ${CMAKE_INSTALL_PREFIX}/include)
 if(LINUX)
-    set(OPENSSL_LIB_DIR ${OPENSSL_INSTALL_PREFIX}/lib64)
+    set(OPENSSL_LIB_DIR ${CMAKE_INSTALL_PREFIX}/lib64)
 else()
-    set(OPENSSL_LIB_DIR ${OPENSSL_INSTALL_PREFIX}/lib)
+    set(OPENSSL_LIB_DIR ${CMAKE_INSTALL_PREFIX}/lib)
 endif()
 
 # Display helpful messages
@@ -42,9 +49,7 @@ set(ZLIB_LINK_LIBRARIES z${ZLIB_DEBUG_POSTFIX})
 
 set(OPENSSL_LINK_LIBRARIES)
 if(MSVC)
-    set(OPENSSL_LINK_LIBRARIES
-        "ws2_32.lib;gdi32.lib;advapi32.lib;crypt32.lib;user32.lib"
-    )
+    set(OPENSSL_LINK_LIBRARIES "ws2_32.lib;gdi32.lib;advapi32.lib;crypt32.lib;user32.lib")
     set(ZLIB_LINK_LIBRARIES zlib${ZLIB_DEBUG_POSTFIX})
     set(OPENSSL_LIBRARY_PREFIX lib)
 endif()
@@ -87,12 +92,14 @@ add_test(
     COMMAND
         ${CMAKE_CTEST_COMMAND}
         # --verbose
-        --output-on-failure -C $<CONFIG> --build-and-test
-        "${CMAKE_CURRENT_SOURCE_DIR}/test-FindOpenSSL"
-        "${CMAKE_CURRENT_BINARY_DIR}/find-package-test" --build-generator
-        ${CMAKE_GENERATOR} --build-makeprogram ${CMAKE_MAKE_PROGRAM}
-        --build-options "-DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}"
-        "-DCMAKE_C_STANDARD=${CMAKE_C_STANDARD}" "-DCMAKE_BUILD_TYPE=$<CONFIG>"
-        "-DCMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}"
-        "-DOPENSSL_INSTALL_PREFIX=${OPENSSL_INSTALL_PREFIX}"
+        --output-on-failure -C $<CONFIG> --build-and-test #
+        "${CMAKE_CURRENT_SOURCE_DIR}/test-FindOpenSSL" "${CMAKE_CURRENT_BINARY_DIR}/find-package-test" #
+        --build-generator ${CMAKE_GENERATOR} #
+        --build-makeprogram ${CMAKE_MAKE_PROGRAM} #
+        --build-options #
+        "-DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}" #
+        "-DCMAKE_C_STANDARD=${CMAKE_C_STANDARD}" #
+        "-DCMAKE_BUILD_TYPE=$<CONFIG>" #
+        "-DCMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}" #
+        "-DCMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX}"
 )
