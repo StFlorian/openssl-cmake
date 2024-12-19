@@ -2,8 +2,8 @@ cmake_minimum_required(VERSION 3.27...3.31)
 
 project(openssl_build LANGUAGES C)
 
-set(OPENSSL_VERSION "3.4.0")
-set(SHA256 e15dda82fe2fe8139dc2ac21a36d4ca01d5313c75f99f46c4e8a27709b7294bf)
+set(OPENSSL_VERSION "1.0.2u")
+set(SHA256 ecd0c6ffb493dd06707d38b14bb4d8c2288bb7033735606569d8f90f89669d16)
 set(OPENSSL_URL "https://www.openssl.org/source/openssl-${OPENSSL_VERSION}.tar.gz")
 
 include(ExternalProject)
@@ -37,26 +37,25 @@ ExternalProject_Add(
     USES_TERMINAL_CONFIGURE TRUE
     CONFIGURE_COMMAND
         # see build/src/openssl/Configure
-        # bash only! build/src/openssl/config
-        ${PERL_PROGRAM} ../openssl/Configure --api=1.0.2 # ORIG --api=1.1.0 no-deprecated
-        --static # TODO: depends on BUILD_SHARED_LIBS
-        --$<LIST:TRANSFORM,$<CONFIG>,TOLOWER> # NOTE: --debug or --release
-        --prefix=${CMAKE_INSTALL_PREFIX}
-        # NO, do not use! --libdir=lib # FIXME: /${OPENSSL_BUILD_TYPE}
-        --openssldir=${CMAKE_INSTALL_PREFIX}/etc/ssl #
-        no-zlib # FIXME: debug lib name: zlibd.lib
-        # --with-zlib-include=${CMAKE_INSTALL_PREFIX}/include #
-        # --with-zlib-lib=${CMAKE_INSTALL_PREFIX}/lib #
-        no-apps no-aria no-asm no-async no-bf no-blake2 no-camellia no-capieng no-cast no-cmac no-cmp no-cms no-ct no-docs
-        no-dso no-ec no-ec2m no-gost no-idea no-makedepend no-mdc2 no-ocb no-rc2 no-rc4 no-rmd160 no-scrypt no-seed
-        no-shared no-siphash no-sm2 no-sm3 no-sm4 no-srtp no-ssl-trace no-tests no-threads no-whirlpool
+        # and build/src/openssl-stamp/openssl-configure-Debug.cmake
+        #     build/src/openssl-stamp/openssl-configure-err.log
+        #     build/src/openssl-stamp/openssl-configure-out.log
+        # FIXME: --no-shared # XXX --static # TODO: depends on BUILD_SHARED_LIBS
+        ### cd <SOURCE_DIR> &&
+        ### ${PERL_PROGRAM} Configure
+        ### $<LIST:TRANSFORM,$<CONFIG>,TOLOWER>-VC-WIN32 # darwin64-x86_64-cc, or linux-x86_64, or VC-WIN32
+        ### no-comp no-asm no-hw no-krb5
+        ### --prefix=${CMAKE_INSTALL_PREFIX}
+        ### # --openssldir=${CMAKE_INSTALL_PREFIX}/etc/ssl #
+        ### && ms\\\\do_nt.bat
+        cd # cd ${CMAKE_SOURCE_DIR} && build.bat
     # linux-aarch64
     #--Build step-----------------
     USES_TERMINAL_BUILD TRUE
-    BUILD_COMMAND ${MAKE_PROGRAM} -C <BINARY_DIR>
+    BUILD_COMMAND echo ${MAKE_PROGRAM} -C <SOURCE_DIR> -f ms\\\\nt.mak
     #--Install step---------------
     USES_TERMINAL_INSTALL TRUE
-    INSTALL_COMMAND ${MAKE_PROGRAM} -C <BINARY_DIR> install
+    INSTALL_COMMAND echo ${MAKE_PROGRAM} -C <SOURCE_DIR> -f ms\\\\nt.mak install
     #--Logging -------------------
     LOG_DOWNLOAD OFF
     LOG_CONFIGURE ${OPENSSL_WRITE_LOG}
