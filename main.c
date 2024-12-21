@@ -191,6 +191,7 @@ int main(int argc, char **argv)
         rem_server_ip = argv[2];
     }
 
+#if 0
     /* Create context used by both client and server */
     ssl_ctx = create_context(isServer);
 
@@ -368,6 +369,7 @@ exit:
         close(client_skt);
     if (server_skt != -1)
         close(server_skt);
+#endif
 
     printf("sslecho exiting\n");
 

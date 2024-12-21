@@ -15,10 +15,31 @@ else()
     set(OPENSSL_WRITE_LOG ON)
 endif()
 
+set(CONFIG_DEBUG_PREFIX)
+if(CMAKE_BUILD_TYPE STREQUAL Debug)
+    set(CONFIG_DEBUG_PREFIX debug-)
+endif()
+
+set(GENERATE_MAKE_FILES echo done)
 if(MSVC)
     set(MAKE_PROGRAM nmake)
+    set(OS_CONFIG_SETUP VC-WIN32)
+    file(WRITE build/src/openssl/makefile "include ms/nt.mak")
+    file(WRITE build/src/openssl/build-on-windows.bat "call ms/do_ms.bat && nmake -f ms/nt.mak")
+    set(GENERATE_MAKE_FILES "build-on-windows.bat")
+    set(INSTALL_SW install)
 else()
     set(MAKE_PROGRAM make -j8)
+    set(INSTALL_SW install_sw)
+    if(LINUX)
+        # or linux-aarch64
+        set(OS_CONFIG_SETUP linux-x86_64)
+    elseif(APPLE)
+        # missing darwin-arm64
+        set(OS_CONFIG_SETUP darwin64-x86_64-cc)
+    else()
+        message(FATAL_ERROR "OS is not supported")
+    endif()
 endif()
 
 find_program(PERL_PROGRAM perl REQUIRED)
@@ -29,33 +50,35 @@ ExternalProject_Add(
     openssl
     DOWNLOAD_EXTRACT_TIMESTAMP TRUE
     PREFIX ${CMAKE_BINARY_DIR}
+    BUILD_IN_SOURCE TRUE
     #--Download step--------------
     URL ${OPENSSL_URL}
     URL_HASH SHA256=${SHA256}
     #--Update/Patch step----------
+    PATCH_COMMAND
+        ${PERL_PROGRAM} Configure ${CONFIG_DEBUG_PREFIX}${OS_CONFIG_SETUP} no-asm no-hw no-krb5
+        --prefix=${CMAKE_INSTALL_PREFIX}
     #--Configure step-------------
     USES_TERMINAL_CONFIGURE TRUE
-    CONFIGURE_COMMAND
-        # see build/src/openssl/Configure
-        # and build/src/openssl-stamp/openssl-configure-Debug.cmake
-        #     build/src/openssl-stamp/openssl-configure-err.log
-        #     build/src/openssl-stamp/openssl-configure-out.log
-        # FIXME: --no-shared # XXX --static # TODO: depends on BUILD_SHARED_LIBS
-        ### cd <SOURCE_DIR> &&
-        ### ${PERL_PROGRAM} Configure
-        ### $<LIST:TRANSFORM,$<CONFIG>,TOLOWER>-VC-WIN32 # darwin64-x86_64-cc, or linux-x86_64, or VC-WIN32
-        ### no-comp no-asm no-hw no-krb5
-        ### --prefix=${CMAKE_INSTALL_PREFIX}
-        ### # --openssldir=${CMAKE_INSTALL_PREFIX}/etc/ssl #
-        ### && ms\\\\do_nt.bat
-        cd # cd ${CMAKE_SOURCE_DIR} && build.bat
-    # linux-aarch64
+    # see build/src/openssl/Configure
+    # and build/src/openssl-build
+    # first:
+    #     build/src/openssl-stamp/openssl-configure-Debug.cmake
+    #     build/src/openssl-stamp/openssl-configure-Release.cmake
+    #     build/src/openssl-stamp/openssl-configure-err.log
+    #     build/src/openssl-stamp/openssl-configure-out.log
+    # second:
+    #     build/src/openssl-stamp/openssl-build-Debug.cmake
+    #     build/src/openssl-stamp/openssl-build-Release.cmake
+    #     build/src/openssl-stamp/openssl-build-err.log
+    #     build/src/openssl-stamp/openssl-build-out.log
+    CONFIGURE_COMMAND ${GENERATE_MAKE_FILES}
     #--Build step-----------------
     USES_TERMINAL_BUILD TRUE
-    BUILD_COMMAND echo ${MAKE_PROGRAM} -C <SOURCE_DIR> -f ms\\\\nt.mak
+    BUILD_COMMAND ${MAKE_PROGRAM}
     #--Install step---------------
     USES_TERMINAL_INSTALL TRUE
-    INSTALL_COMMAND echo ${MAKE_PROGRAM} -C <SOURCE_DIR> -f ms\\\\nt.mak install
+    INSTALL_COMMAND ${MAKE_PROGRAM} ${INSTALL_SW}
     #--Logging -------------------
     LOG_DOWNLOAD OFF
     LOG_CONFIGURE ${OPENSSL_WRITE_LOG}
