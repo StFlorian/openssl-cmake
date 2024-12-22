@@ -8,13 +8,11 @@ set(OPENSSL_URL "https://www.openssl.org/source/openssl-${OPENSSL_VERSION}.tar.g
 
 include(ExternalProject)
 
-set(GENERATE_MAKE_FILES pwd)
+set(CMAKE_MESSAGE_LOG_LEVEL STATUS)
 if(MSVC)
     set(MAKE_PROGRAM nmake)
     set(OS_CONFIG_SETUP VC-WIN32)
-    file(WRITE build/src/openssl/makefile "include ms/nt.mak")
-    # file(WRITE build/src/openssl/build-on-windows.bat "call ms/do_ms.bat")
-    set(GENERATE_MAKE_FILES "cmd /C ./ms/do_ms.bat")
+    file(WRITE ${CMAKE_BINARY_DIR}/src/openssl/DOSmakefile "include ms/nt.mak")
     set(INSTALL_SW install)
 else()
     set(MAKE_PROGRAM make -j8)
@@ -55,13 +53,13 @@ ExternalProject_Add(
     URL ${OPENSSL_URL}
     URL_HASH SHA256=${SHA256}
     #--Update/Patch step----------
-    PATCH_COMMAND
-        ${PERL_PROGRAM} Configure ${CONFIG_DEBUG_PREFIX}${OS_CONFIG_SETUP} no-asm no-hw no-krb5
-        --prefix=${CMAKE_INSTALL_PREFIX}
+    # see build/src/openssl/Configure
+    #     build/src/openssl-stamp/openssl-patch-info.txt
+    # PATCH_COMMAND pwd
     #--Configure step-------------
     USES_TERMINAL_CONFIGURE TRUE
-    # see build/src/openssl/Configure
-    # and build/src/openssl-build
+    # see build/src/openssl-build
+    # and build/src/openssl-stamp
     # first:
     #     build/src/openssl-stamp/openssl-configure-Debug.cmake
     #     build/src/openssl-stamp/openssl-configure-Release.cmake
@@ -72,7 +70,10 @@ ExternalProject_Add(
     #     build/src/openssl-stamp/openssl-build-Release.cmake
     #     build/src/openssl-stamp/openssl-build-err.log
     #     build/src/openssl-stamp/openssl-build-out.log
-    CONFIGURE_COMMAND ${GENERATE_MAKE_FILES}
+    # gen build/tmp/openssl-cfgcmd.txt
+    CONFIGURE_COMMAND
+        ${PERL_PROGRAM} Configure ${CONFIG_DEBUG_PREFIX}${OS_CONFIG_SETUP} no-asm no-hw no-krb5
+        --prefix=${CMAKE_INSTALL_PREFIX}
     #--Build step-----------------
     USES_TERMINAL_BUILD TRUE
     BUILD_COMMAND ${MAKE_PROGRAM}
@@ -80,10 +81,28 @@ ExternalProject_Add(
     USES_TERMINAL_INSTALL TRUE
     INSTALL_COMMAND ${MAKE_PROGRAM} ${INSTALL_SW}
     #--Logging -------------------
+    LOG_MERGED_STDOUTERR TRUE
     LOG_DOWNLOAD OFF
     LOG_CONFIGURE ${OPENSSL_WRITE_LOG}
     LOG_BUILD ${OPENSSL_WRITE_LOG}
     LOG_INSTALL OFF
 )
+
+if(MSVC)
+    ExternalProject_Add_Step(
+        openssl
+        generation
+        COMMAND ${CMAKE_COMMAND} -E echo "Makefile generation"
+        COMMAND ${CMAKE_COMMAND} -E rm -f Makefile
+        COMMAND "cmd /C ./ms/do_ms.bat"
+        COMMAND ${CMAKE_COMMAND} -E copy DOSmakefile Makefile
+        COMMAND ${CMAKE_COMMAND} -E echo "... generation completed"
+        WORKING_DIRECTORY <SOURCE_DIR>
+        DEPENDEES configure
+        DEPENDERS build
+        USES_TERMINAL TRUE
+    )
+    ExternalProject_Add_Steptargets(openssl generation)
+endif()
 
 add_dependencies(openssl zlib1)
