@@ -8,11 +8,9 @@ set(OPENSSL_URL "https://www.openssl.org/source/openssl-${OPENSSL_VERSION}.tar.g
 
 include(ExternalProject)
 
-set(CMAKE_MESSAGE_LOG_LEVEL STATUS)
 if(MSVC)
     set(MAKE_PROGRAM nmake)
     set(OS_CONFIG_SETUP VC-WIN32)
-    file(WRITE ${CMAKE_BINARY_DIR}/src/openssl/DOSmakefile "include ms/nt.mak")
     set(INSTALL_SW install)
 else()
     set(MAKE_PROGRAM make -j8)
@@ -47,6 +45,7 @@ include(zlib.cmake)
 ExternalProject_Add(
     openssl
     DOWNLOAD_EXTRACT_TIMESTAMP TRUE
+    DOWNLOAD_NO_PROGRESS TRUE
     PREFIX ${CMAKE_BINARY_DIR}
     BUILD_IN_SOURCE TRUE
     #--Download step--------------
@@ -95,7 +94,7 @@ if(MSVC)
         COMMAND ${CMAKE_COMMAND} -E echo "Makefile generation"
         COMMAND ${CMAKE_COMMAND} -E rm -f Makefile
         COMMAND "cmd /C ./ms/do_ms.bat"
-        COMMAND ${CMAKE_COMMAND} -E copy DOSmakefile Makefile
+        COMMAND echo "include ms/nt.mak" > Makefile
         COMMAND ${CMAKE_COMMAND} -E echo "... generation completed"
         WORKING_DIRECTORY <SOURCE_DIR>
         DEPENDEES configure
