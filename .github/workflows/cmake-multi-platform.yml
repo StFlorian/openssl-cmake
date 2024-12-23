@@ -14,11 +14,7 @@ jobs:
     runs-on: ${{ matrix.os }}
 
     strategy:
-      # Set fail-fast to false to ensure that feedback is delivered for all matrix combinations.
-      # Consider changing this to true when your workflow is stable.
       fail-fast: false
-
-      # To add more build types (Release, Debug, RelWithDebInfo, etc.) customize the build_type list.
       matrix:
         os: [ubuntu-latest, macos-13, windows-latest]
         build_type: [Debug, Release]
@@ -55,7 +51,6 @@ jobs:
           submodules: 'true'
       - uses: seanmiddleditch/gha-setup-ninja@master
 
-      # see https://github.com/mathstuf/cxx-modules-sandbox/blob/master/.github/workflows/cmake.yml
       - name: Visual Studio toolchain environment
         uses: TheMrMilchmann/setup-msvc-dev@v1
         if: matrix.os == 'windows-latest'
@@ -74,6 +69,8 @@ jobs:
           -D CMAKE_C_COMPILER=${{ matrix.c_compiler }}
           -D CMAKE_BUILD_TYPE=${{ matrix.build_type }}
           -D CMAKE_INSTALL_PREFIX=/tmp/install
+          -D CMAKE_C_FLAGS="${{ env.CMAKE_C_FLAGS }}"
+          -D CMAKE_CXX_FLAGS="${{ env.CMAKE_CXX_FLAGS }}"
           -S ${{ github.workspace }}
           -G "${{ matrix.generator }}"
 
