@@ -92,7 +92,7 @@ if(MSVC)
         openssl
         generation
         COMMAND ${CMAKE_COMMAND} -E echo "Makefile generation"
-        COMMAND "cmd /C ./ms/do_ms.bat"
+        COMMAND "cmd /C ms\\do_ms.bat"
         COMMAND ${CMAKE_COMMAND} -E echo "... generation completed"
         WORKING_DIRECTORY <SOURCE_DIR>
         DEPENDEES configure
