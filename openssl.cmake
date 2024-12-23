@@ -9,7 +9,7 @@ set(OPENSSL_URL "https://www.openssl.org/source/openssl-${OPENSSL_VERSION}.tar.g
 include(ExternalProject)
 
 if(MSVC)
-    set(MAKE_PROGRAM nmake -f ms\\\\nt.mak)
+    set(MAKE_PROGRAM nmake -f ms\\nt.mak)
     set(OS_CONFIG_SETUP VC-WIN32)
     set(INSTALL_SW install)
 else()
