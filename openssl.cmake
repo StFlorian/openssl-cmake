@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.27...3.31)
+cmake_minimum_required(VERSION 3.25...3.31)
 
 project(openssl_build LANGUAGES C)
 
@@ -9,7 +9,7 @@ set(OPENSSL_URL "https://www.openssl.org/source/openssl-${OPENSSL_VERSION}.tar.g
 include(ExternalProject)
 
 if(MSVC)
-    set(MAKE_PROGRAM nmake)
+    set(MAKE_PROGRAM nmake -f ms\\\\nt.mak)
     set(OS_CONFIG_SETUP VC-WIN32)
     set(INSTALL_SW install)
 else()
@@ -92,9 +92,7 @@ if(MSVC)
         openssl
         generation
         COMMAND ${CMAKE_COMMAND} -E echo "Makefile generation"
-        COMMAND ${CMAKE_COMMAND} -E rm -f Makefile
         COMMAND "cmd /C ./ms/do_ms.bat"
-        COMMAND echo "include ms/nt.mak" > Makefile
         COMMAND ${CMAKE_COMMAND} -E echo "... generation completed"
         WORKING_DIRECTORY <SOURCE_DIR>
         DEPENDEES configure
