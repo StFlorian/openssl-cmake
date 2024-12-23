@@ -9,7 +9,7 @@ set(OPENSSL_URL "https://www.openssl.org/source/openssl-${OPENSSL_VERSION}.tar.g
 include(ExternalProject)
 
 if(MSVC)
-    set(MAKE_PROGRAM nmake -f ms\\nt.mak)
+    set(MAKE_PROGRAM nmake -f ms\\\\nt.mak)
     set(OS_CONFIG_SETUP VC-WIN32)
     set(INSTALL_SW install)
 else()
@@ -92,9 +92,9 @@ if(MSVC)
         openssl
         generation
         COMMAND ${CMAKE_COMMAND} -E echo "Makefile generation"
-        COMMAND "cmd /C ms\\do_ms.bat"
+        COMMAND cmd /C "cd ${WORKING_DIRECTORY} && ms\\do_ms.bat"
         COMMAND ${CMAKE_COMMAND} -E echo "... generation completed"
-        WORKING_DIRECTORY <SOURCE_DIR>
+        WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/src/openssl
         DEPENDEES configure
         DEPENDERS build
         USES_TERMINAL TRUE
