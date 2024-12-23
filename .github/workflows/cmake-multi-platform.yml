@@ -65,14 +65,14 @@ jobs:
 
       - name: Configure CMake
         run: >
-          cmake -B build
-          -D CMAKE_C_COMPILER=${{ matrix.c_compiler }}
-          -D CMAKE_BUILD_TYPE=${{ matrix.build_type }}
-          -D CMAKE_INSTALL_PREFIX=/tmp/install
-          -D CMAKE_C_FLAGS="${{ env.CMAKE_C_FLAGS }}"
-          -D CMAKE_CXX_FLAGS="${{ env.CMAKE_CXX_FLAGS }}"
-          -S ${{ github.workspace }}
-          -G "${{ matrix.generator }}"
+         cmake -B ${{ steps.strings.outputs.build-output-dir }}
+         -D CMAKE_C_COMPILER=${{ matrix.c_compiler }}
+         -D CMAKE_BUILD_TYPE=${{ matrix.build_type }}
+         -D CMAKE_INSTALL_PREFIX=/tmp/install
+         -D CMAKE_C_FLAGS="-DOPENSSL_THREADS -DDSO_WIN32 -W3 -Gs0 -GF -Gy -Zi -nologo -DOPENSSL_SYSNAME_WIN32 -DWIN32_LEAN_AND_MEAN -DL_ENDIAN -D_CRT_SECURE_NO_DEPRECATE -D_WINSOCK_DEPRECATED_NO_WARNINGS /WX-"
+         -D CMAKE_CXX_FLAGS="-DOPENSSL_THREADS -DDSO_WIN32 -W3 -Gs0 -GF -Gy -Zi -nologo -DOPENSSL_SYSNAME_WIN32 -DWIN32_LEAN_AND_MEAN -DL_ENDIAN -D_CRT_SECURE_NO_DEPRECATE -D_WINSOCK_DEPRECATED_NO_WARNINGS /WX-"
+         -S ${{ github.workspace }}
+         -G "${{ matrix.generator }}"
 
       - name: Build
         run: cmake --build build --config ${{ matrix.build_type }}
