@@ -54,7 +54,8 @@ ExternalProject_Add(
     #--Update/Patch step----------
     # see build/src/openssl/Configure
     #     build/src/openssl-stamp/openssl-patch-info.txt
-    # PATCH_COMMAND pwd
+    PATCH_COMMAND
+        ${PERL_PROGRAM} -p -i.bak -e "s/[\\/-]WX//g" util/pl/VC-32.pl Configure shlib/win32.bat shlib/win32dll.bat
     #--Configure step-------------
     USES_TERMINAL_CONFIGURE TRUE
     # see build/src/openssl-build
@@ -92,7 +93,8 @@ if(MSVC)
         openssl
         generation
         COMMAND ${CMAKE_COMMAND} -E echo "Makefile generation"
-        COMMAND cmd /C "cd ${WORKING_DIRECTORY} && ms\\do_ms.bat"
+        COMMAND cmd /C "cd && ms\\do_ms.bat"
+        # XXX COMMAND /bin/sh -c "pwd && ls -l ms/do_ms.bat"
         COMMAND ${CMAKE_COMMAND} -E echo "... generation completed"
         WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/src/openssl
         DEPENDEES configure
